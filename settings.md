@@ -39,6 +39,7 @@ parallaximage 7: images\parallax_forest_7.png
 
 SPRITE name:CAPITANO, x:50, y:285
 SPRITE name:UFO, x:1900, y:400
+SPRITE name:UFO, x:1400, y:600
 SPRITE name:PORTAL, x:50, y:900, goto:2
 
 PIATTAFORMA x:960, y:285, width:1920, height:50, color:TRANSPARENT
