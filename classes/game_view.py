@@ -507,11 +507,6 @@ class GameView(arcade.View):
 
         self._load_background_for_level(index)
 
-        # Fallback UFO se non definito nel livello
-        if not self.ufo_list:
-            fallback_y = min(WINDOW_HEIGHT - 200, level_height - 200)
-            self.ufo_list.append(UFO(start_x=WINDOW_WIDTH / 2, start_y=fallback_y, bounds_width=level_width, bounds_height=level_height))
-
         # Pulisce proiettili ed esplosioni residui
         self.bullet_list.clear()
         self.explosion_list.clear()
