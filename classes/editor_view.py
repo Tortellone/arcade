@@ -267,7 +267,7 @@ class EditorView(arcade.View):
         y -= 14
         arcade.draw_text("Ctrl+S: Salva", px + 10, y, arcade.color.WHITE, 11)
         y -= 14
-        arcade.draw_text("F5: Playtest", px + 10, y, arcade.color.WHITE, 11)
+        arcade.draw_text("F5/P: Playtest", px + 10, y, arcade.color.WHITE, 11)
         y -= 14
         arcade.draw_text("Del: Elimina", px + 10, y, arcade.color.WHITE, 11)
         y -= 14
@@ -561,7 +561,7 @@ class EditorView(arcade.View):
         if key == arcade.key.S and (modifiers & arcade.key.MOD_CTRL):
             self.save_level()
             return
-        if key == arcade.key.F5:
+        if key == arcade.key.F5 or key == arcade.key.P:
             self.playtest()
             return
         if key == arcade.key.DELETE:
@@ -695,11 +695,14 @@ class EditorView(arcade.View):
             self.status_timer = 3.0
 
     def playtest(self):
-        from .game_view import GameView
-
-        game = GameView(window=self.window)
-        self.window.show_view(game)
-        game.setup_level(self.current_level_idx)
+        try:
+            from .game_view import GameView
+            game = GameView(window=self.window)
+            self.window.show_view(game)
+            game.setup_level(self.current_level_idx)
+        except Exception as e:
+            self.status_msg = f"Errore playtest: {e}"
+            self.status_timer = 5.0
 
     def update(self, delta_time):
         if self.status_timer > 0:
