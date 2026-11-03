@@ -124,7 +124,7 @@ class EditorView(arcade.View):
             arcade.draw_text(self.status_msg, 10, h - 30, arcade.color.YELLOW, 14)
 
         arcade.draw_text(
-            "1-Select 2-Platform 3-UFO 4-Portal 5-Capitano | Ctrl+S=Save | F5=Play | Del=Delete | +/-=Zoom | Arrows=Pan",
+            "1-Select 2-Platform 3-UFO 4-Portal 5-Capitano | PgUp/PgDn=Livello | Ctrl+S=Save | F5=Play | Del=Delete | +/-=Zoom | Arrows=Pan",
             10,
             h - 55,
             arcade.color.WHITE,
@@ -420,6 +420,14 @@ class EditorView(arcade.View):
             return
         if key == arcade.key.DELETE:
             self.delete_selected()
+            return
+        if key == arcade.key.PAGEUP:
+            if self.current_level_idx > 0:
+                self.load_level(self.current_level_idx - 1)
+            return
+        elif key == arcade.key.PAGEDOWN:
+            if self.current_level_idx < len(LEVELS) - 1:
+                self.load_level(self.current_level_idx + 1)
             return
 
         if key == arcade.key.KEY_1:
