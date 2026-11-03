@@ -223,6 +223,16 @@ class EditorView(arcade.View):
             arcade.draw_text(label, x + 5, h - self.toolbar_height + 18, arcade.color.BLACK, 11)
             x += 130
 
+        # Bottone RUN
+        run_x = x + 10
+        arcade.draw_lrbt_rectangle_filled(run_x, run_x + 80, h - self.toolbar_height + 5, h - 5, arcade.color.LIME)
+        arcade.draw_text("RUN (F5)", run_x + 5, h - self.toolbar_height + 18, arcade.color.BLACK, 11)
+
+        # Bottone EXIT
+        exit_x = run_x + 90
+        arcade.draw_lrbt_rectangle_filled(exit_x, exit_x + 80, h - self.toolbar_height + 5, h - 5, arcade.color.RED)
+        arcade.draw_text("EXIT (Esc)", exit_x + 5, h - self.toolbar_height + 18, arcade.color.BLACK, 11)
+
         lvl_text = f"Level {self.current_level_idx + 1}/{len(LEVELS)} | Zoom {self.zoom:.1f}"
         arcade.draw_text(lvl_text, w - 300, h - self.toolbar_height + 18, arcade.color.WHITE, 12)
 
@@ -267,9 +277,9 @@ class EditorView(arcade.View):
         y -= 14
         arcade.draw_text("Ctrl+S: Salva", px + 10, y, arcade.color.WHITE, 11)
         y -= 14
-        arcade.draw_text("F5/P: Playtest", px + 10, y, arcade.color.WHITE, 11)
-        y -= 14
         arcade.draw_text("Del: Elimina", px + 10, y, arcade.color.WHITE, 11)
+        y -= 14
+        arcade.draw_text("Esc: Chiudi editor", px + 10, y, arcade.color.WHITE, 11)
         y -= 14
         arcade.draw_text("+/-: Zoom", px + 10, y, arcade.color.WHITE, 11)
         y -= 14
@@ -488,6 +498,18 @@ class EditorView(arcade.View):
                 return
             tx += 130
 
+        # RUN button
+        run_x = tx + 10
+        if run_x <= x <= run_x + 80:
+            self.playtest()
+            return
+
+        # EXIT button
+        exit_x = run_x + 90
+        if exit_x <= x <= exit_x + 80:
+            self.window.close()
+            return
+
     def _pick_handle(self, wx, wy):
         """Restituisce il nome del handle (tl, tr, bl, br) se il click e' su un angolo della piattaforma selezionata."""
         if self.selected_type != "platform":
@@ -561,11 +583,11 @@ class EditorView(arcade.View):
         if key == arcade.key.S and (modifiers & arcade.key.MOD_CTRL):
             self.save_level()
             return
-        if key == arcade.key.F5 or key == arcade.key.P:
-            self.playtest()
-            return
         if key == arcade.key.DELETE:
             self.delete_selected()
+            return
+        if key == arcade.key.ESCAPE:
+            self.window.close()
             return
         if key == arcade.key.PAGEUP:
             if self.current_level_idx > 0:
