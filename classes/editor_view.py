@@ -36,6 +36,10 @@ class EditorView(arcade.View):
         self.dragging = False
         self.last_mouse_world = (0, 0)
 
+        # Resize con mouse su handle
+        self.resize_handle = None
+        self.resize_anchor = None
+
         self.toolbar_height = 50
         self.panel_width = 280
 
@@ -179,6 +183,11 @@ class EditorView(arcade.View):
             arcade.draw_lrbt_rectangle_filled(l - 3, r + 3, b - 3, t + 3, arcade.color.YELLOW)
         arcade.draw_lrbt_rectangle_filled(l, r, b, t, color)
         arcade.draw_lrbt_rectangle_outline(l, r, b, t, arcade.color.WHITE, 1)
+        if selected:
+            # Disegna 4 handle agli angoli
+            for hx, hy in [(l, t), (r, t), (l, b), (r, b)]:
+                arcade.draw_lrbt_rectangle_filled(hx - 5, hx + 5, hy - 5, hy + 5, arcade.color.WHITE)
+                arcade.draw_lrbt_rectangle_outline(hx - 5, hx + 5, hy - 5, hy + 5, arcade.color.BLACK, 1)
 
     def _draw_sprite(self, sp, selected=False):
         name = sp["name"].upper()
@@ -302,6 +311,8 @@ class EditorView(arcade.View):
             y -= 14
             arcade.draw_text("Drag: sposta", px + 10, y, arcade.color.WHITE, 10)
             y -= 13
+            arcade.draw_text("Angoli: ridimensiona", px + 10, y, arcade.color.WHITE, 10)
+            y -= 13
             arcade.draw_text("A/D: larghezza", px + 10, y, arcade.color.WHITE, 10)
             y -= 13
             arcade.draw_text("W/S: altezza", px + 10, y, arcade.color.WHITE, 10)
@@ -370,6 +381,18 @@ class EditorView(arcade.View):
 
         if button == arcade.MOUSE_BUTTON_LEFT:
             if self.tool == "select":
+                # Prima controlla se c'e' un handle della piattaforma selezionata
+                handle = self._pick_handle(wx, wy)
+                if handle:
+                    obj = self._get_selected_obj()
+                    if obj:
+                        self.resize_handle = handle
+                        self.resize_anchor = {
+                            "x": obj["x"], "y": obj["y"],
+                            "width": obj["width"], "height": obj["height"],
+                        }
+                        self.dragging = True
+                        return
                 found = self._pick_object(wx, wy)
                 if found:
                     self.selected_type, self.selected_index = found
@@ -385,6 +408,55 @@ class EditorView(arcade.View):
         if not self.dragging:
             return
         wx, wy = self.screen_to_world(x, y)
+
+        if self.resize_handle:
+            obj = self._get_selected_obj()
+            if obj and self.resize_anchor:
+                ax = self.resize_anchor["x"]
+                ay = self.resize_anchor["y"]
+                aw = self.resize_anchor["width"]
+                ah = self.resize_anchor["height"]
+
+                if self.resize_handle == "br":
+                    anchor_x = ax - aw / 2  # left fisso
+                    anchor_y = ay              # top fisso
+                    new_w = max(10, wx - anchor_x)
+                    new_h = max(5, anchor_y - wy)
+                    obj["width"] = new_w
+                    obj["height"] = new_h
+                    obj["x"] = anchor_x + new_w / 2
+                    obj["y"] = anchor_y
+                elif self.resize_handle == "bl":
+                    anchor_x = ax + aw / 2  # right fisso
+                    anchor_y = ay              # top fisso
+                    new_w = max(10, anchor_x - wx)
+                    new_h = max(5, anchor_y - wy)
+                    obj["width"] = new_w
+                    obj["height"] = new_h
+                    obj["x"] = anchor_x - new_w / 2
+                    obj["y"] = anchor_y
+                elif self.resize_handle == "tr":
+                    anchor_x = ax - aw / 2  # left fisso
+                    anchor_y = ay - ah       # bottom fisso
+                    new_w = max(10, wx - anchor_x)
+                    clamped_wy = max(anchor_y + 5, wy)
+                    new_h = clamped_wy - anchor_y
+                    obj["width"] = new_w
+                    obj["height"] = new_h
+                    obj["x"] = anchor_x + new_w / 2
+                    obj["y"] = clamped_wy
+                elif self.resize_handle == "tl":
+                    anchor_x = ax + aw / 2  # right fisso
+                    anchor_y = ay - ah       # bottom fisso
+                    new_w = max(10, anchor_x - wx)
+                    clamped_wy = max(anchor_y + 5, wy)
+                    new_h = clamped_wy - anchor_y
+                    obj["width"] = new_w
+                    obj["height"] = new_h
+                    obj["x"] = anchor_x - new_w / 2
+                    obj["y"] = clamped_wy
+            return
+
         obj = self._get_selected_obj()
         if obj:
             obj["x"] = wx
@@ -392,6 +464,8 @@ class EditorView(arcade.View):
 
     def on_mouse_release(self, x, y, button, modifiers):
         self.dragging = False
+        self.resize_handle = None
+        self.resize_anchor = None
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
         if scroll_y == 0:
@@ -413,6 +487,29 @@ class EditorView(arcade.View):
                 self.tool = tool
                 return
             tx += 130
+
+    def _pick_handle(self, wx, wy):
+        """Restituisce il nome del handle (tl, tr, bl, br) se il click e' su un angolo della piattaforma selezionata."""
+        if self.selected_type != "platform":
+            return None
+        platforms = self.level.get("platforms", [])
+        if not (0 <= self.selected_index < len(platforms)):
+            return None
+        pf = platforms[self.selected_index]
+        x, y, w, h = pf["x"], pf["y"], pf["width"], pf["height"]
+        # Angoli in world
+        corners = {
+            "tl": (x - w / 2, y),
+            "tr": (x + w / 2, y),
+            "bl": (x - w / 2, y - h),
+            "br": (x + w / 2, y - h),
+        }
+        # Tolleranza in world: 12 pixel schermo convertiti in world
+        tol = 12 / self.zoom
+        for name, (cx, cy) in corners.items():
+            if math.hypot(wx - cx, wy - cy) <= tol:
+                return name
+        return None
 
     def _pick_object(self, wx, wy):
         for i, pf in enumerate(self.level.get("platforms", [])):
