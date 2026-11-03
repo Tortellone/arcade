@@ -16,4 +16,5 @@ from .bullet_plasma import BulletPlasma
 from .bullet_energy import BulletEnergy
 from .capitano import Capitano
 from .game_view import GameView
+from .editor_view import EditorView
 from .ufo import UFO

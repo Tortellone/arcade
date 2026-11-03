@@ -136,15 +136,6 @@ class Capitano(arcade.Sprite):
         self.center_x += self.change_x
         self.center_y += self.change_y
 
-        # Collisione con il terreno (quota personalizzabile per livello, riferita ai piedi)
-        feet_y = self.center_y - self.height / 2
-        if feet_y <= self.ground_y:
-            self.center_y = self.ground_y + self.height / 2
-            self.change_y = 0.0
-            self.on_ground = True
-        else:
-            self.on_ground = False
-
     def jump(self):
         """Fa saltare il personaggio."""
         if self.is_dead:

@@ -345,6 +345,25 @@ class GameView(arcade.View):
         self.player_list.update(delta_time)
         if not self.player.is_dead:
             self._handle_player_platforms(player_prev_y)
+            # Se non ha atterrato su una piattaforma, controlla il terreno
+            if not self.player.on_ground and self.player.change_y <= 0:
+                player_bottom = self.player.center_y - self.player.height / 2
+                has_platform_below = False
+                player_left = self.player.center_x - abs(self.player.width) / 2
+                player_right = self.player.center_x + abs(self.player.width) / 2
+                for platform in self.platform_list:
+                    pf_left = platform.center_x - platform.width / 2
+                    pf_right = platform.center_x + platform.width / 2
+                    pf_top = platform.center_y + platform.height / 2
+                    if player_right > pf_left and player_left < pf_right:
+                        if pf_top < player_bottom:
+                            has_platform_below = True
+                            break
+                if not has_platform_below:
+                    if player_bottom <= self.player.ground_y:
+                        self.player.center_y = self.player.ground_y + self.player.height / 2
+                        self.player.change_y = 0.0
+                        self.player.on_ground = True
 
         if self.player.death_done:
             self.setup_level(self.current_level_index)
@@ -419,12 +438,10 @@ class GameView(arcade.View):
         right_bound = level_width - half_width
         self.player.center_x = max(left_bound, min(self.player.center_x, right_bound))
 
-        # Limite verticale: non uscire dal livello (sopra) e non cadere sotto il terreno
+        # Limite verticale: non uscire dal livello verso l'alto
         half_height = abs(self.player.height) / 2
         top_bound = level_height - half_height
         self.player.center_y = min(self.player.center_y, top_bound)
-        if self.player.ground_y is not None:
-            self.player.center_y = max(self.player.center_y, self.player.ground_y + half_height)
 
     def setup_level(self, index, start_x=None, start_y=None):
         """Configura lo scenario per il livello indicato (o ricarica quello corrente)."""
@@ -460,9 +477,9 @@ class GameView(arcade.View):
             if name == "CAPITANO":
                 self.player.center_x = x
                 self.player.center_y = y + self.player.height / 2
-                self.player.ground_y = y
+                self.player.ground_y = GROUND_Y
                 self.player.change_y = 0.0
-                self.player.on_ground = True
+                self.player.on_ground = False
                 player_set = True
             elif name == "UFO":
                 ufo = UFO(start_x=x, start_y=y, bounds_width=level_width, bounds_height=level_height)
@@ -480,11 +497,13 @@ class GameView(arcade.View):
                 start_y = GROUND_Y
             self.player.center_x = start_x
             self.player.center_y = start_y
-            self.player.ground_y = start_y
+            self.player.ground_y = GROUND_Y
             self.player.change_y = 0.0
-            self.player.on_ground = True
+            self.player.on_ground = False
 
         self.player.change_x = 0.0
+        self.player.is_dead = False
+        self.player.death_done = False
 
         self._load_background_for_level(index)
 

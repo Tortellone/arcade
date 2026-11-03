@@ -266,3 +266,114 @@ def reload_game_config():
 
 # Le specifiche degli sprite caricate da settings.md sovrascrivono i default
 reload_game_config()
+
+
+
+# ---------------------------------------------------------------------------
+# Salvataggio settings.md
+# ---------------------------------------------------------------------------
+
+_COLOR_NAME_MAP = {
+    arcade.color.TRANSPARENT_BLACK: "TRANSPARENT",
+    arcade.color.RED: "RED",
+    arcade.color.GREEN: "GREEN",
+    arcade.color.BLUE: "BLUE",
+    arcade.color.YELLOW: "YELLOW",
+    arcade.color.GRAY: "GRAY",
+    arcade.color.BLACK: "BLACK",
+    arcade.color.WHITE: "WHITE",
+    arcade.color.ORANGE: "ORANGE",
+    arcade.color.PURPLE: "PURPLE",
+    arcade.color.PINK: "PINK",
+    arcade.color.BROWN: "BROWN",
+    arcade.color.CYAN: "CYAN",
+    arcade.color.MAGENTA: "MAGENTA",
+}
+
+
+def _color_to_string(color):
+    """Converte un colore Arcade/tuple in stringa per settings.md."""
+    if isinstance(color, tuple):
+        if len(color) == 4 and color[3] == 0:
+            return "TRANSPARENT"
+        for key, name in _COLOR_NAME_MAP.items():
+            if isinstance(key, tuple) and len(key) >= 3:
+                if tuple(key[:3]) == tuple(color[:3]):
+                    return name
+        # fallback: cerca in arcade.color
+        for attr in dir(arcade.color):
+            val = getattr(arcade.color, attr)
+            if isinstance(val, (tuple, list)) and len(val) >= 3:
+                if tuple(val[:3]) == tuple(color[:3]):
+                    return attr
+        return f"RGB({color[0]},{color[1]},{color[2]})"
+
+    # Oggetto Color (arcade 3.x)
+    if hasattr(color, "r") and hasattr(color, "g") and hasattr(color, "b"):
+        rgb = (color.r, color.g, color.b)
+        for key, name in _COLOR_NAME_MAP.items():
+            if isinstance(key, tuple) and len(key) >= 3:
+                if tuple(key[:3]) == rgb:
+                    return name
+        for attr in dir(arcade.color):
+            val = getattr(arcade.color, attr)
+            if isinstance(val, (tuple, list)) and len(val) >= 3:
+                if tuple(val[:3]) == rgb:
+                    return attr
+        return f"RGB({color.r},{color.g},{color.b})"
+
+    return "GRAY"
+
+
+def save_levels_to_md(path, levels):
+    """Scrive settings.md preservando la sezione '# Sprites settings' e rigenerando i livelli."""
+    header = ""
+    if os.path.isfile(path):
+        with open(path, "r", encoding="utf-8-sig") as f:
+            content = f.read()
+        match = re.search(r"(?:\n|^)# Levels settings\s*\n", content, re.IGNORECASE)
+        if match:
+            header = content[:match.start()]
+            if not header.endswith("\n"):
+                header += "\n"
+        else:
+            header = content
+            if not header.endswith("\n"):
+                header += "\n"
+
+    lines = []
+    lines.append("# Levels settings\n")
+
+    for level in levels:
+        lines.append("\n## level\n")
+        lines.append(f"id={level.get('id', 1)}\n")
+        lines.append(f"lenght: {level.get('width', 1920)}\n")
+        lines.append(f"height: {level.get('height', 1080)}\n")
+        lines.append(f"backgroundtype: {level.get('backgroundtype', 'parallax')}\n")
+        if level.get("backgroundimage"):
+            lines.append(f"backgroundimage: {level['backgroundimage']}\n")
+        for i, img in enumerate(level.get("parallaximages", []), 1):
+            lines.append(f"parallaximage {i}: {img}\n")
+
+        lines.append("\n")
+        for sprite in level.get("sprites", []):
+            extra = sprite.get("extra", "")
+            name = sprite.get("name", "UNKNOWN")
+            x = sprite.get("x", 0)
+            y = sprite.get("y", 0)
+            if extra:
+                lines.append(f"SPRITE name:{name}, x:{x}, y:{y}, goto:{extra}\n")
+            else:
+                lines.append(f"SPRITE name:{name}, x:{x}, y:{y}\n")
+
+        lines.append("\n")
+        for pf in level.get("platforms", []):
+            color_str = _color_to_string(pf.get("color", arcade.color.GRAY))
+            lines.append(
+                f"PIATTAFORMA x:{pf['x']}, y:{pf['y']}, "
+                f"width:{pf['width']}, height:{pf['height']}, color:{color_str}\n"
+            )
+
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(header)
+        f.writelines(lines)
