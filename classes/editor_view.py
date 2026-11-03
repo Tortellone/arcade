@@ -120,17 +120,6 @@ class EditorView(arcade.View):
         self._draw_toolbar(w, h)
         self._draw_property_panel(w, h)
 
-        if self.status_timer > 0:
-            arcade.draw_text(self.status_msg, 10, h - 30, arcade.color.YELLOW, 14)
-
-        arcade.draw_text(
-            "1-Select 2-Platform 3-UFO 4-Portal 5-Capitano | PgUp/PgDn=Livello | Ctrl+S=Save | F5=Play | Del=Delete | +/-=Zoom | Arrows=Pan",
-            10,
-            h - 55,
-            arcade.color.WHITE,
-            12,
-        )
-
     def _draw_grid(self, w, h):
         level_w = self.level.get("width", 1920)
         level_h = self.level.get("height", 1080)
@@ -234,53 +223,113 @@ class EditorView(arcade.View):
             px, w, 0, h - self.toolbar_height, arcade.color.DARK_SLATE_BLUE
         )
 
+        y = h - self.toolbar_height - 20
+
+        # Status
+        if self.status_timer > 0:
+            arcade.draw_text(self.status_msg, px + 10, y, arcade.color.YELLOW, 12)
+            y -= 20
+
+        # Info generali
+        tool_name = self.tool.upper()
+        arcade.draw_text(f"Livello {self.current_level_idx + 1}/{len(LEVELS)}", px + 10, y, arcade.color.CYAN, 12, bold=True)
+        y -= 18
+        arcade.draw_text(f"Zoom: {self.zoom:.1f}x | Tool: {tool_name}", px + 10, y, arcade.color.WHITE, 11)
+        y -= 22
+
+        # Sezione TOOLS
+        arcade.draw_text("TOOLS", px + 10, y, arcade.color.LIME_GREEN, 12, bold=True)
+        y -= 16
+        arcade.draw_text("1: Select", px + 10, y, arcade.color.WHITE, 11)
+        y -= 14
+        arcade.draw_text("2: Platform", px + 10, y, arcade.color.WHITE, 11)
+        y -= 14
+        arcade.draw_text("3: UFO", px + 10, y, arcade.color.WHITE, 11)
+        y -= 14
+        arcade.draw_text("4: Portal", px + 10, y, arcade.color.WHITE, 11)
+        y -= 14
+        arcade.draw_text("5: Capitano", px + 10, y, arcade.color.WHITE, 11)
+        y -= 22
+
+        # Sezione AZIONI
+        arcade.draw_text("AZIONI", px + 10, y, arcade.color.LIME_GREEN, 12, bold=True)
+        y -= 16
+        arcade.draw_text("PgUp/PgDn: Livello +/-", px + 10, y, arcade.color.WHITE, 11)
+        y -= 14
+        arcade.draw_text("Ctrl+S: Salva", px + 10, y, arcade.color.WHITE, 11)
+        y -= 14
+        arcade.draw_text("F5: Playtest", px + 10, y, arcade.color.WHITE, 11)
+        y -= 14
+        arcade.draw_text("Del: Elimina", px + 10, y, arcade.color.WHITE, 11)
+        y -= 14
+        arcade.draw_text("+/-: Zoom", px + 10, y, arcade.color.WHITE, 11)
+        y -= 14
+        arcade.draw_text("Frecce: Pan camera", px + 10, y, arcade.color.WHITE, 11)
+        y -= 14
+        arcade.draw_text("Shift: Precisione 1px", px + 10, y, arcade.color.WHITE, 11)
+        y -= 14
+        arcade.draw_text("Scroll: Zoom", px + 10, y, arcade.color.WHITE, 11)
+        y -= 22
+
+        # Sezione OGGETTO SELEZIONATO
         if self.selected_type is None:
-            arcade.draw_text(
-                "Nessuna selezione", px + 10, h - self.toolbar_height - 30, arcade.color.WHITE, 12
-            )
+            arcade.draw_text("NESSUNA SELEZIONE", px + 10, y, arcade.color.GRAY, 12, bold=True)
             return
 
         obj = self._get_selected_obj()
         if obj is None:
             return
 
-        y = h - self.toolbar_height - 30
-        arcade.draw_text(
-            f"Tipo: {self.selected_type.upper()}", px + 10, y, arcade.color.YELLOW, 14, bold=True
-        )
-        y -= 25
+        arcade.draw_text("SELEZIONATO", px + 10, y, arcade.color.YELLOW, 12, bold=True)
+        y -= 18
+        arcade.draw_text(f"Tipo: {self.selected_type.upper()}", px + 10, y, arcade.color.WHITE, 11)
+        y -= 16
 
         if self.selected_type == "platform":
-            arcade.draw_text(f"X: {obj['x']:.0f} (drag)", px + 10, y, arcade.color.WHITE, 12)
-            y -= 20
-            arcade.draw_text(f"Y: {obj['y']:.0f} (superiore)", px + 10, y, arcade.color.WHITE, 12)
-            y -= 20
-            arcade.draw_text(f"W: {obj['width']:.0f} (A/D)", px + 10, y, arcade.color.WHITE, 12)
-            y -= 20
-            arcade.draw_text(f"H: {obj['height']:.0f} (W/S)", px + 10, y, arcade.color.WHITE, 12)
-            y -= 20
+            arcade.draw_text(f"X: {obj['x']:.0f}", px + 10, y, arcade.color.WHITE, 11)
+            y -= 14
+            arcade.draw_text(f"Y: {obj['y']:.0f} (superiore)", px + 10, y, arcade.color.WHITE, 11)
+            y -= 14
+            arcade.draw_text(f"W: {obj['width']:.0f}", px + 10, y, arcade.color.WHITE, 11)
+            y -= 14
+            arcade.draw_text(f"H: {obj['height']:.0f}", px + 10, y, arcade.color.WHITE, 11)
+            y -= 14
             color_name = self._color_to_name(obj["color"])
-            arcade.draw_text(f"Color: {color_name} (C)", px + 10, y, arcade.color.WHITE, 12)
-            y -= 20
-        elif self.selected_type == "sprite":
-            arcade.draw_text(f"Name: {obj['name']}", px + 10, y, arcade.color.WHITE, 12)
-            y -= 20
-            arcade.draw_text(f"X: {obj['x']:.0f}", px + 10, y, arcade.color.WHITE, 12)
-            y -= 20
-            arcade.draw_text(f"Y: {obj['y']:.0f}", px + 10, y, arcade.color.WHITE, 12)
-            y -= 20
-            extra = obj.get("extra", "")
-            arcade.draw_text(f"Goto: {extra or '-'} (G)", px + 10, y, arcade.color.WHITE, 12)
+            arcade.draw_text(f"Color: {color_name}", px + 10, y, arcade.color.WHITE, 11)
             y -= 20
 
-        y -= 20
-        arcade.draw_text("Tasti:", px + 10, y, arcade.color.CYAN, 12)
-        y -= 20
-        arcade.draw_text("Frecce: muovi", px + 10, y, arcade.color.WHITE, 11)
-        y -= 18
-        arcade.draw_text("Shift: precisione 1px", px + 10, y, arcade.color.WHITE, 11)
-        y -= 18
-        arcade.draw_text("Del: elimina", px + 10, y, arcade.color.WHITE, 11)
+            arcade.draw_text("MODIFICA", px + 10, y, arcade.color.CYAN, 11, bold=True)
+            y -= 14
+            arcade.draw_text("Drag: sposta", px + 10, y, arcade.color.WHITE, 10)
+            y -= 13
+            arcade.draw_text("A/D: larghezza", px + 10, y, arcade.color.WHITE, 10)
+            y -= 13
+            arcade.draw_text("W/S: altezza", px + 10, y, arcade.color.WHITE, 10)
+            y -= 13
+            arcade.draw_text("C: colore", px + 10, y, arcade.color.WHITE, 10)
+        elif self.selected_type == "sprite":
+            arcade.draw_text(f"Name: {obj['name']}", px + 10, y, arcade.color.WHITE, 11)
+            y -= 14
+            arcade.draw_text(f"X: {obj['x']:.0f}", px + 10, y, arcade.color.WHITE, 11)
+            y -= 14
+            arcade.draw_text(f"Y: {obj['y']:.0f}", px + 10, y, arcade.color.WHITE, 11)
+            y -= 14
+            extra = obj.get("extra", "")
+            if obj["name"].upper() == "PORTAL":
+                arcade.draw_text(f"Goto: {extra or '-'}", px + 10, y, arcade.color.WHITE, 11)
+                y -= 20
+                arcade.draw_text("MODIFICA", px + 10, y, arcade.color.CYAN, 11, bold=True)
+                y -= 14
+                arcade.draw_text("G: cambia destinazione", px + 10, y, arcade.color.WHITE, 10)
+            else:
+                y -= 20
+                arcade.draw_text("MODIFICA", px + 10, y, arcade.color.CYAN, 11, bold=True)
+                y -= 14
+                arcade.draw_text("Drag: sposta", px + 10, y, arcade.color.WHITE, 10)
+                y -= 13
+                arcade.draw_text("Frecce: sposta 10px", px + 10, y, arcade.color.WHITE, 10)
+                y -= 13
+                arcade.draw_text("Shift: precisione 1px", px + 10, y, arcade.color.WHITE, 10)
 
     def _color_to_name(self, color):
         if isinstance(color, tuple) and len(color) == 4 and color[3] == 0:
