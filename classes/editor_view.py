@@ -265,6 +265,8 @@ class EditorView(arcade.View):
         y -= 16
         arcade.draw_text("PgUp/PgDn: Livello +/-", px + 10, y, arcade.color.WHITE, 11)
         y -= 14
+        arcade.draw_text("F5: Playtest", px + 10, y, arcade.color.WHITE, 11)
+        y -= 14
         arcade.draw_text("Ctrl+S: Salva", px + 10, y, arcade.color.WHITE, 11)
         y -= 14
         arcade.draw_text("Del: Elimina", px + 10, y, arcade.color.WHITE, 11)
@@ -578,6 +580,9 @@ class EditorView(arcade.View):
             return
         if key == arcade.key.ESCAPE:
             self.window.close()
+            return
+        if key == arcade.key.F5:
+            self.playtest()
             return
         if key == arcade.key.PAGEUP:
             if self.current_level_idx > 0:
