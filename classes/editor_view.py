@@ -159,32 +159,8 @@ class EditorView(arcade.View):
                 except Exception:
                     pass
         elif bg_type == "parallax":
-            images = self.level.get("parallaximages", [])
-            level_h = self.level.get("height", 1080)
-            for i, pimg in enumerate(images):
-                try:
-                    tex = arcade.load_texture(pimg)
-                    # Layer più lontano (i=0) si muove più lentamente
-                    factor = (i + 1) / len(images) * 0.8 if len(images) > 1 else 0.5
-                    parallax_x = self.offset_x * factor
-
-                    sw = tex.width * self.zoom
-                    sh = tex.height * self.zoom
-
-                    # Calcola quanti tile servono per coprire la vista
-                    view_left = self.offset_x
-                    first_tile_x = ((view_left - parallax_x) // tex.width) * tex.width + parallax_x
-                    tiles = int((w / self.zoom) / tex.width) + 3
-
-                    for t in range(tiles):
-                        tile_x = first_tile_x + t * tex.width
-                        sx, _ = self.world_to_screen(tile_x, 0)
-                        _, sy = self.world_to_screen(0, level_h / 2)
-                        # Fade per i layer posteriori (più opachi i primi, più trasparenti gli ultimi)
-                        alpha = max(40, 200 - int(30 * i))
-                        arcade.draw_texture_rect(tex, arcade.XYWH(sx, sy, sw, sh), alpha=alpha)
-                except Exception:
-                    pass
+            # Nessun rendering parallax in editor (evita confusione)
+            pass
 
     def _draw_platform(self, pf, selected=False):
         x, y = pf["x"], pf["y"]
