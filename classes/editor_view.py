@@ -1,6 +1,7 @@
 ﻿"""Editor di livelli WYSIWYG per Capitano."""
 
 import arcade
+import arcade.gui
 import math
 import os
 
@@ -39,6 +40,10 @@ class EditorView(arcade.View):
         # Resize con mouse su handle
         self.resize_handle = None
         self.resize_anchor = None
+
+        self.popup_visible = False
+        self.popup_inputs = {}
+        self.ui_manager = arcade.gui.UIManager()
 
         self.toolbar_height = 50
         self.panel_width = 280
@@ -123,6 +128,11 @@ class EditorView(arcade.View):
         # UI in coordinate schermo
         self._draw_toolbar(w, h)
         self._draw_property_panel(w, h)
+
+        # Popup proprietà
+        if self.popup_visible:
+            arcade.draw_lrbt_rectangle_filled(0, w, 0, h, (0, 0, 0, 180))
+            self.ui_manager.draw()
 
     def _draw_grid(self, w, h):
         level_w = self.level.get("width", 1920)
@@ -320,6 +330,8 @@ class EditorView(arcade.View):
             arcade.draw_text("W/S: altezza", px + 10, y, arcade.color.WHITE, 10)
             y -= 13
             arcade.draw_text("C: colore", px + 10, y, arcade.color.WHITE, 10)
+            y -= 13
+            arcade.draw_text("E: Properties", px + 10, y, arcade.color.WHITE, 10)
         elif self.selected_type == "sprite":
             arcade.draw_text(f"Name: {obj['name']}", px + 10, y, arcade.color.WHITE, 11)
             y -= 14
@@ -334,6 +346,8 @@ class EditorView(arcade.View):
                 arcade.draw_text("MODIFICA", px + 10, y, arcade.color.CYAN, 11, bold=True)
                 y -= 14
                 arcade.draw_text("G: cambia destinazione", px + 10, y, arcade.color.WHITE, 10)
+                y -= 13
+                arcade.draw_text("E: Properties", px + 10, y, arcade.color.WHITE, 10)
             else:
                 y -= 20
                 arcade.draw_text("MODIFICA", px + 10, y, arcade.color.CYAN, 11, bold=True)
@@ -343,6 +357,8 @@ class EditorView(arcade.View):
                 arcade.draw_text("Frecce: sposta 10px", px + 10, y, arcade.color.WHITE, 10)
                 y -= 13
                 arcade.draw_text("Shift: precisione 1px", px + 10, y, arcade.color.WHITE, 10)
+                y -= 13
+                arcade.draw_text("E: Properties", px + 10, y, arcade.color.WHITE, 10)
 
     def _color_to_name(self, color):
         if isinstance(color, tuple) and len(color) == 4 and color[3] == 0:
@@ -368,6 +384,8 @@ class EditorView(arcade.View):
         return None
 
     def on_mouse_press(self, x, y, button, modifiers):
+        if self.popup_visible:
+            return
         w = self.window.width if self.window else WINDOW_WIDTH
         h = self.window.height if self.window else WINDOW_HEIGHT
 
@@ -407,6 +425,8 @@ class EditorView(arcade.View):
                 self.dragging = True
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+        if self.popup_visible:
+            return
         if not self.dragging:
             return
         wx, wy = self.screen_to_world(x, y)
@@ -465,11 +485,15 @@ class EditorView(arcade.View):
             obj["y"] = wy
 
     def on_mouse_release(self, x, y, button, modifiers):
+        if self.popup_visible:
+            return
         self.dragging = False
         self.resize_handle = None
         self.resize_anchor = None
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
+        if self.popup_visible:
+            return
         if scroll_y == 0:
             return
         wx, wy = self.screen_to_world(x, y)
@@ -572,8 +596,21 @@ class EditorView(arcade.View):
             self.selected_index = len(sprites) - 1
 
     def on_key_press(self, key, modifiers):
+        if self.popup_visible:
+            if key == arcade.key.ESCAPE:
+                self._close_properties_popup()
+                return
+            if key == arcade.key.ENTER or key == arcade.key.RETURN:
+                self._apply_properties()
+                return
+            # Lascia che l'ui_manager gestisca gli altri tasti (input text)
+            return
+
         if key == arcade.key.S and (modifiers & arcade.key.MOD_CTRL):
             self.save_level()
+            return
+        if key == arcade.key.E:
+            self._open_properties_popup()
             return
         if key == arcade.key.DELETE:
             self.delete_selected()
@@ -726,6 +763,152 @@ class EditorView(arcade.View):
             self.status_msg = f"Errore playtest: {e}"
             self.status_timer = 5.0
 
+    def _open_properties_popup(self):
+        if self.selected_type is None:
+            return
+        obj = self._get_selected_obj()
+        if obj is None:
+            return
+
+        self.popup_visible = True
+        self.popup_inputs = {}
+        self.ui_manager.clear()
+
+        w = self.window.width if self.window else WINDOW_WIDTH
+        h = self.window.height if self.window else WINDOW_HEIGHT
+
+        popup_w = 360
+        popup_h = 360
+        base_x = (w - popup_w) / 2 + 20
+        base_y = (h + popup_h) / 2 - 40
+        row_h = 45
+
+        title = arcade.gui.UILabel(
+            text=f"Proprietà {self.selected_type.upper()}",
+            x=base_x, y=base_y + 10,
+            text_color=arcade.color.WHITE,
+            font_size=14,
+            bold=True,
+            width=popup_w - 40,
+        )
+        self.ui_manager.add(title)
+
+        fields = []
+        if self.selected_type == "platform":
+            fields = [
+                ("x", "X:", str(int(obj["x"]))),
+                ("y", "Y:", str(int(obj["y"]))),
+                ("width", "Width:", str(int(obj["width"]))),
+                ("height", "Height:", str(int(obj["height"]))),
+                ("color", "Color:", self._color_to_name(obj["color"])),
+            ]
+        elif self.selected_type == "sprite":
+            fields = [
+                ("name", "Name:", obj["name"]),
+                ("x", "X:", str(int(obj["x"]))),
+                ("y", "Y:", str(int(obj["y"]))),
+            ]
+            if obj["name"].upper() == "PORTAL":
+                fields.append(("extra", "Goto:", obj.get("extra", "")))
+
+        for i, (key, label, value) in enumerate(fields):
+            y_pos = base_y - 30 - i * row_h
+
+            lbl = arcade.gui.UILabel(
+                text=label, x=base_x, y=y_pos,
+                text_color=arcade.color.WHITE, font_size=12,
+                width=80, height=25,
+            )
+            self.ui_manager.add(lbl)
+
+            inp = arcade.gui.UIInputText(
+                x=base_x + 90, y=y_pos - 3,
+                width=200, height=28,
+                text=value,
+                font_size=12,
+                text_color=arcade.color.WHITE,
+                border_color=arcade.color.GRAY,
+            )
+            self.ui_manager.add(inp)
+            self.popup_inputs[key] = inp
+
+        btn_y = base_y - 30 - len(fields) * row_h - 20
+
+        apply_btn = arcade.gui.UIFlatButton(
+            text="Applica", x=base_x + 30, y=btn_y,
+            width=100, height=30,
+        )
+        apply_btn.on_click = self._apply_properties
+        self.ui_manager.add(apply_btn)
+
+        cancel_btn = arcade.gui.UIFlatButton(
+            text="Annulla", x=base_x + 150, y=btn_y,
+            width=100, height=30,
+        )
+        cancel_btn.on_click = self._close_properties_popup
+        self.ui_manager.add(cancel_btn)
+
+        self.ui_manager.enable()
+
+    def _close_properties_popup(self, event=None):
+        self.popup_visible = False
+        self.popup_inputs = {}
+        self.ui_manager.clear()
+        self.ui_manager.disable()
+
+    def _apply_properties(self, event=None):
+        if not self.popup_inputs:
+            self._close_properties_popup()
+            return
+
+        obj = self._get_selected_obj()
+        if obj is None:
+            self._close_properties_popup()
+            return
+
+        try:
+            if self.selected_type == "platform":
+                if "x" in self.popup_inputs:
+                    obj["x"] = float(self.popup_inputs["x"].text)
+                if "y" in self.popup_inputs:
+                    obj["y"] = float(self.popup_inputs["y"].text)
+                if "width" in self.popup_inputs:
+                    obj["width"] = max(10, float(self.popup_inputs["width"].text))
+                if "height" in self.popup_inputs:
+                    obj["height"] = max(5, float(self.popup_inputs["height"].text))
+                if "color" in self.popup_inputs:
+                    color_name = self.popup_inputs["color"].text.strip().upper()
+                    if color_name == "TRANSPARENT":
+                        obj["color"] = (0, 0, 0, 0)
+                    else:
+                        found = False
+                        for name, val in self.platform_colors:
+                            if name == color_name:
+                                obj["color"] = val
+                                found = True
+                                break
+                        if not found:
+                            c = getattr(arcade.color, color_name, None)
+                            if c:
+                                obj["color"] = c
+            elif self.selected_type == "sprite":
+                if "x" in self.popup_inputs:
+                    obj["x"] = float(self.popup_inputs["x"].text)
+                if "y" in self.popup_inputs:
+                    obj["y"] = float(self.popup_inputs["y"].text)
+                if "extra" in self.popup_inputs:
+                    obj["extra"] = self.popup_inputs["extra"].text.strip()
+
+            self.status_msg = "Proprietà aggiornate"
+            self.status_timer = 2.0
+        except ValueError:
+            self.status_msg = "Valore non valido"
+            self.status_timer = 2.0
+
+        self._close_properties_popup()
+
     def update(self, delta_time):
         if self.status_timer > 0:
             self.status_timer -= delta_time
+        if self.popup_visible:
+            self.ui_manager.on_update(delta_time)
