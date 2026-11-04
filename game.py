@@ -1,4 +1,5 @@
-﻿import arcade
+﻿import sys
+import arcade
 from classes import WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, GameView
 
 
@@ -13,6 +14,17 @@ def main():
     window.set_location(x, y)
     game = GameView(window)
     window.show_view(game)
+
+    # Se passato --level N dalla riga di comando, avvia da quel livello
+    level_idx = 0
+    for i, arg in enumerate(sys.argv):
+        if arg == "--level" and i + 1 < len(sys.argv):
+            try:
+                level_idx = int(sys.argv[i + 1])
+            except ValueError:
+                pass
+
+    game.setup_level(level_idx)
     arcade.run()
 
 

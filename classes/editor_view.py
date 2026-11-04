@@ -717,11 +717,16 @@ class EditorView(arcade.View):
             self.status_timer = 3.0
 
     def playtest(self):
+        import subprocess
+        import sys
+        import os
         try:
-            from .game_view import GameView
-            game = GameView(window=self.window)
-            self.window.show_view(game)
-            game.setup_level(self.current_level_idx)
+            save_levels_to_md(SETTINGS_MD_PATH, LEVELS)
+            # Avvia game.py come processo separato per evitare
+            # di esaurire lo spazio nel texture atlas condiviso
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            game_py = os.path.join(base_dir, "game.py")
+            subprocess.Popen([sys.executable, game_py, "--level", str(self.current_level_idx)])
         except Exception as e:
             self.status_msg = f"Errore playtest: {e}"
             self.status_timer = 5.0
