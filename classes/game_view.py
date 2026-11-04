@@ -33,7 +33,7 @@ class GameView(arcade.View):
         self.bullet_list = arcade.SpriteList()
         self.ufo_list = arcade.SpriteList()
         self.portal_list = arcade.SpriteList()
-        self.platform_list = arcade.SpriteList()
+        self.platform_list = []
 
         # Esplosioni
         self.explosion_list = arcade.SpriteList()
@@ -224,7 +224,18 @@ class GameView(arcade.View):
         # Applica view matrix per il mondo di gioco (scroll orizzontale e verticale)
         self.window.ctx.view_matrix = Mat4.from_translation(Vec3(-self.camera_x, -self.camera_y, 0))
 
-        self.platform_list.draw()
+        # Disegna piattaforme manualmente (evita texture atlas troppo grandi)
+        for platform in self.platform_list:
+            half_w = platform.width / 2
+            half_h = platform.height / 2
+            arcade.draw_lrbt_rectangle_filled(
+                platform.center_x - half_w,
+                platform.center_x + half_w,
+                platform.center_y - half_h,
+                platform.center_y + half_h,
+                platform.color,
+            )
+
         self.player_list.draw()
         self.portal_list.draw()
         self.bullet_list.draw()
@@ -370,7 +381,8 @@ class GameView(arcade.View):
             return
 
         self.explosion_list.update(delta_time)
-        self.platform_list.update(delta_time)
+        for platform in self.platform_list:
+            platform.update(delta_time)
         for ufo in self.ufo_list:
             ufo.ai(self.player)
             enemy_bullet = ufo.maybe_shoot(self.player, delta_time)
