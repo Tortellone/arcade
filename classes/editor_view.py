@@ -174,8 +174,8 @@ class EditorView(arcade.View):
         elif bg_type == "parallax":
             # Nessun rendering parallax in editor (evita confusione)
             pass
-        elif bg_type == "pattern":
-            pfile = self.level.get("patternfile", "")
+        elif bg_type == "texture":
+            pfile = self.level.get("backgroundtexture", "")
             if pfile:
                 try:
                     tex = arcade.load_texture(pfile)

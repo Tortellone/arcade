@@ -1,4 +1,4 @@
-# Sprites settings
+﻿# Sprites settings
 
 ## CAPITANO
 walk.speed:5
@@ -27,7 +27,8 @@ height:40
 id=1
 lenght: 19200
 height: 3000
-backgroundtype: parallax
+backgroundtype: texture
+backgroundtexture: images\brick1.png
 parallaximage 1: images\parallax_forest_1.png
 parallaximage 2: images\parallax_forest_2.png
 parallaximage 3: images\parallax_forest_3.png
@@ -45,12 +46,12 @@ PIATTAFORMA x:198.0, y:402.0, width:200.0, height:20.0, color:GRAY
 PIATTAFORMA x:1000.0, y:350.0, width:200.0, height:20.0, color:GRAY
 PIATTAFORMA x:1313.36541724935, y:391.89634061402376, width:226.7308344987, height:101.33954989231188, color:GRAY
 PIATTAFORMA x:1000.0, y:550.0, width:200.0, height:20.0, color:GRAY
-PIATTAFORMA x:700.0, y:650.0, width:200.0, height:20.0, color:GRAY
+PIATTAFORMA x:712.0, y:637.0, width:200.0, height:20.0, color:GRAY
 PIATTAFORMA x:400.0, y:750.0, width:200.0, height:20.0, color:GRAY
 PIATTAFORMA x:348.0, y:350.0, width:208.0, height:161.0, color:BROWN
 PIATTAFORMA x:109.0, y:846.0, width:200.0, height:20.0, color:RED
 PIATTAFORMA x:1659.3818488835939, y:924.5008492710934, width:200.0, height:20.0, color:RED
-PIATTAFORMA x:990.0, y:754.0, width:200.0, height:20.0, color:BLUE
+PIATTAFORMA x:1463.0, y:562.0, width:200.0, height:20.0, color:BLUE
 PIATTAFORMA x:1310.0, y:825.0, width:200.0, height:20.0, color:RED
 PIATTAFORMA x:1942.849743606415, y:946.8575690140486, width:244.44922657066127, height:190.95365632308187, color:RED
 PIATTAFORMA x:685.3027593354296, y:1110.2097845349222, width:200.0, height:20.0, color:RED
@@ -71,6 +72,7 @@ PIATTAFORMA x:338.14792759096235, y:1889.106464829471, width:200.0, height:20.0,
 PIATTAFORMA x:586.5932757140497, y:1996.9840501987064, width:200.0, height:20.0, color:RED
 PIATTAFORMA x:776.196304544827, y:2062.3644049679397, width:200.0, height:20.0, color:RED
 PIATTAFORMA x:942.9162092063723, y:2144.0898484294817, width:200.0, height:20.0, color:RED
+PIATTAFORMA x:992.0, y:747.0, width:200, height:20, color:RED
 
 ## level
 id=2

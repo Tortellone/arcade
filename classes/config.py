@@ -187,8 +187,8 @@ def _load_levels(text):
                     level["backgroundtype"] = val
                 elif key == "backgroundimage":
                     level["backgroundimage"] = val
-                elif key == "patternfile":
-                    level["patternfile"] = val
+                elif key == "backgroundtexture":
+                    level["backgroundtexture"] = val
                 elif re.match(r"parallaximage\s*\d*", key):
                     if "parallaximages" not in level:
                         level["parallaximages"] = []

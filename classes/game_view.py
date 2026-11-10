@@ -1,4 +1,4 @@
-"""Vista principale del gioco."""
+﻿"""Vista principale del gioco."""
 
 import os
 import re
@@ -101,10 +101,10 @@ class GameView(arcade.View):
             else:
                 self.background_image_texture = None
             self.pattern_texture = None
-        elif bg_type == "pattern":
+        elif bg_type == "texture":
             self.background = None
             self.background_image_texture = None
-            path = level.get("patternfile", "")
+            path = level.get("backgroundtexture", "")
             if path:
                 if not os.path.isabs(path):
                     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -236,7 +236,7 @@ class GameView(arcade.View):
         elif self.background:
             self.background.draw(self.camera_x)
 
-        # Disegna pattern tiling se il livello usa backgroundtype: pattern
+        # Disegna pattern tiling se il livello usa backgroundtype: texture
         if self.pattern_texture:
             tex = self.pattern_texture
             tw = tex.width
