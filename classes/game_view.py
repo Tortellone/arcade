@@ -525,6 +525,14 @@ class GameView(arcade.View):
                 self.player.ground_y = GROUND_Y
                 self.player.change_y = 0.0
                 self.player.on_ground = False
+                if "width" in sprite_def:
+                    target_w = float(sprite_def["width"])
+                    if self.player.texture.width > 0:
+                        self.player.scale_x = target_w / self.player.texture.width
+                if "height" in sprite_def:
+                    target_h = float(sprite_def["height"])
+                    if self.player.texture.height > 0:
+                        self.player.scale_y = target_h / self.player.texture.height
                 player_set = True
             elif name == "UFO":
                 ufo = UFO(start_x=x, start_y=y, bounds_width=level_width, bounds_height=level_height)
