@@ -51,6 +51,7 @@ class GameView(arcade.View):
         # Sfondo (parallax o immagine fissa)
         self.background = None
         self.background_image_texture = None
+        self.pattern_texture = None
 
         # UFO nemici e portali (creati da setup_level)
 
@@ -88,6 +89,7 @@ class GameView(arcade.View):
             images = level.get("parallaximages", [])
             self.background = Background_Parallax(image_paths=images)
             self.background_image_texture = None
+            self.pattern_texture = None
         elif bg_type == "image":
             self.background = None
             path = level.get("backgroundimage", "")
@@ -98,10 +100,23 @@ class GameView(arcade.View):
                 self.background_image_texture = arcade.load_texture(path)
             else:
                 self.background_image_texture = None
+            self.pattern_texture = None
+        elif bg_type == "pattern":
+            self.background = None
+            self.background_image_texture = None
+            path = level.get("patternfile", "")
+            if path:
+                if not os.path.isabs(path):
+                    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                    path = os.path.join(base_dir, path)
+                self.pattern_texture = arcade.load_texture(path)
+            else:
+                self.pattern_texture = None
         else:
             # Fallback a vuoto
             self.background = Background_Parallax(image_paths=[])
             self.background_image_texture = None
+            self.pattern_texture = None
 
     def _handle_player_platforms(self, player_prev_y: float):
         """Gestisce atterraggio e caduta del capitano sulle piattaforme.
@@ -220,6 +235,26 @@ class GameView(arcade.View):
                 x += w
         elif self.background:
             self.background.draw(self.camera_x)
+
+        # Disegna pattern tiling se il livello usa backgroundtype: pattern
+        if self.pattern_texture:
+            tex = self.pattern_texture
+            tw = tex.width
+            th = tex.height
+            total_offset_x = self.camera_x % tw
+            total_offset_y = self.camera_y % th
+            start_x = total_offset_x - tw
+            start_y = total_offset_y - th
+            y = start_y
+            while y < WINDOW_HEIGHT:
+                x = start_x
+                while x < WINDOW_WIDTH:
+                    arcade.draw_texture_rect(
+                        tex,
+                        arcade.LBWH(x, y, tw, th),
+                    )
+                    x += tw
+                y += th
 
         # Applica view matrix per il mondo di gioco (scroll orizzontale e verticale)
         self.window.ctx.view_matrix = Mat4.from_translation(Vec3(-self.camera_x, -self.camera_y, 0))

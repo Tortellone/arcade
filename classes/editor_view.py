@@ -174,6 +174,26 @@ class EditorView(arcade.View):
         elif bg_type == "parallax":
             # Nessun rendering parallax in editor (evita confusione)
             pass
+        elif bg_type == "pattern":
+            pfile = self.level.get("patternfile", "")
+            if pfile:
+                try:
+                    tex = arcade.load_texture(pfile)
+                    tw = tex.width
+                    th = tex.height
+                    level_w = self.level.get("width", 1920)
+                    level_h = self.level.get("height", 1080)
+                    # Calcola i tile visibili nel viewport
+                    for tile_x in range(0, int(level_w) + 1, tw):
+                        for tile_y in range(0, int(level_h) + 1, th):
+                            sx, sy = self.world_to_screen(tile_x, tile_y + th / 2)
+                            # Disegna solo se visibile nel viewport
+                            if -tw < sx < w + tw and -th < sy < h + th:
+                                sw = tw * self.zoom
+                                sh = th * self.zoom
+                                arcade.draw_texture_rect(tex, arcade.XYWH(sx, sy, sw, sh))
+                except Exception:
+                    pass
 
     def _draw_platform(self, pf, selected=False):
         x, y = pf["x"], pf["y"]
