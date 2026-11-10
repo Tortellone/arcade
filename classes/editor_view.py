@@ -35,6 +35,9 @@ class EditorView(arcade.View):
         self.load_level(0)
 
         self.dragging = False
+        self.panning = False
+        self.last_pan_x = 0
+        self.last_pan_y = 0
         self.last_mouse_world = (0, 0)
 
         # Resize con mouse su handle
@@ -285,6 +288,8 @@ class EditorView(arcade.View):
         y -= 14
         arcade.draw_text("+/-: Zoom", px + 10, y, arcade.color.WHITE, 11)
         y -= 14
+        arcade.draw_text("Drag (select+vuoto): Pan", px + 10, y, arcade.color.WHITE, 11)
+        y -= 14
         arcade.draw_text("Frecce: Pan camera", px + 10, y, arcade.color.WHITE, 11)
         y -= 14
         arcade.draw_text("Shift: Precisione 1px", px + 10, y, arcade.color.WHITE, 11)
@@ -420,12 +425,21 @@ class EditorView(arcade.View):
                 else:
                     self.selected_type = None
                     self.selected_index = -1
+                    self.panning = True
+                    self.last_pan_x = x
+                    self.last_pan_y = y
             else:
                 self._create_object_at(wx, wy, self.tool)
                 self.dragging = True
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         if self.popup_visible:
+            return
+        if self.panning:
+            self.offset_x -= (x - self.last_pan_x) / self.zoom
+            self.offset_y -= (y - self.last_pan_y) / self.zoom
+            self.last_pan_x = x
+            self.last_pan_y = y
             return
         if not self.dragging:
             return
@@ -488,6 +502,7 @@ class EditorView(arcade.View):
         if self.popup_visible:
             return
         self.dragging = False
+        self.panning = False
         self.resize_handle = None
         self.resize_anchor = None
 
