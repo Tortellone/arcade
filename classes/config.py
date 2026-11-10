@@ -354,6 +354,8 @@ def save_levels_to_md(path, levels):
         lines.append(f"backgroundtype: {level.get('backgroundtype', 'parallax')}\n")
         if level.get("backgroundimage"):
             lines.append(f"backgroundimage: {level['backgroundimage']}\n")
+        if level.get("backgroundtexture"):
+            lines.append(f"backgroundtexture: {level['backgroundtexture']}\n")
         for i, img in enumerate(level.get("parallaximages", []), 1):
             lines.append(f"parallaximage {i}: {img}\n")
 
