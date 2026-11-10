@@ -241,10 +241,8 @@ class GameView(arcade.View):
             tex = self.pattern_texture
             tw = tex.width
             th = tex.height
-            total_offset_x = self.camera_x % tw
-            total_offset_y = self.camera_y % th
-            start_x = total_offset_x - tw
-            start_y = total_offset_y - th
+            start_x = -(self.camera_x % tw)
+            start_y = -(self.camera_y % th)
             y = start_y
             while y < WINDOW_HEIGHT:
                 x = start_x
