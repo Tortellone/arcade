@@ -823,6 +823,22 @@ class EditorView(arcade.View):
             self.status_msg = f"Errore playtest: {e}"
             self.status_timer = 5.0
 
+    def _get_sprite_default_dimensions(self, name):
+        """Restituisce (width, height) di default per un tipo di sprite."""
+        name_upper = name.upper()
+        if name_upper == "CAPITANO":
+            cap = config.SPRITES.get("capitano", {})
+            return float(cap.get("width", 100)), float(cap.get("height", 100))
+        elif name_upper == "UFO":
+            ufo = config.SPRITES.get("ufo", {})
+            return float(ufo.get("width", 96)), float(ufo.get("height", 96))
+        elif name_upper == "PORTAL":
+            tex = self._textures.get("portal")
+            if tex:
+                return float(tex.width), float(tex.height)
+            return 100.0, 100.0
+        return 100.0, 100.0
+
     def _open_properties_popup(self):
         if self.selected_type is None:
             return
@@ -863,12 +879,19 @@ class EditorView(arcade.View):
                 ("color", "Color:", self._color_to_name(obj["color"])),
             ]
         elif self.selected_type == "sprite":
+            default_w, default_h = self._get_sprite_default_dimensions(obj["name"])
+            w_val = obj.get("width")
+            h_val = obj.get("height")
+            if not w_val or w_val == 0:
+                w_val = default_w
+            if not h_val or h_val == 0:
+                h_val = default_h
             fields = [
                 ("name", "Name:", obj["name"]),
                 ("x", "X:", str(int(obj["x"]))),
                 ("y", "Y:", str(int(obj["y"]))),
-                ("width", "Width:", str(int(obj.get("width", 0)))),
-                ("height", "Height:", str(int(obj.get("height", 0)))),
+                ("width", "Width:", str(int(w_val))),
+                ("height", "Height:", str(int(h_val))),
             ]
             if obj["name"].upper() == "PORTAL":
                 fields.append(("extra", "Goto:", obj.get("extra", "")))
