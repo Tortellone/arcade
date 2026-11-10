@@ -39,6 +39,7 @@ class EditorView(arcade.View):
         self.last_pan_x = 0
         self.last_pan_y = 0
         self.last_mouse_world = (0, 0)
+        self.drag_offset = (0, 0)
 
         # Resize con mouse su handle
         self.resize_handle = None
@@ -445,6 +446,9 @@ class EditorView(arcade.View):
                 if found:
                     self.selected_type, self.selected_index = found
                     self.dragging = True
+                    obj = self._get_selected_obj()
+                    if obj:
+                        self.drag_offset = (obj["x"] - wx, obj["y"] - wy)
                 else:
                     self.selected_type = None
                     self.selected_index = -1
@@ -454,6 +458,9 @@ class EditorView(arcade.View):
             else:
                 self._create_object_at(wx, wy, self.tool)
                 self.dragging = True
+                obj = self._get_selected_obj()
+                if obj:
+                    self.drag_offset = (obj["x"] - wx, obj["y"] - wy)
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         if self.popup_visible:
@@ -518,8 +525,8 @@ class EditorView(arcade.View):
 
         obj = self._get_selected_obj()
         if obj:
-            obj["x"] = wx
-            obj["y"] = wy
+            obj["x"] = wx + self.drag_offset[0]
+            obj["y"] = wy + self.drag_offset[1]
 
     def on_mouse_release(self, x, y, button, modifiers):
         if self.popup_visible:
