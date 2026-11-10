@@ -225,8 +225,11 @@ class EditorView(arcade.View):
         sx, sy = self.world_to_screen(x, y)
         tex = self._textures.get(name.lower())
         if tex:
-            sw = tex.width * self.zoom
-            sh = tex.height * self.zoom
+            default_w, default_h = self._get_sprite_default_dimensions(name)
+            w = sp.get("width") or default_w
+            h = sp.get("height") or default_h
+            sw = w * self.zoom
+            sh = h * self.zoom
             arcade.draw_texture_rect(tex, arcade.XYWH(sx, sy, sw, sh))
         else:
             arcade.draw_circle_filled(sx, sy, 20 * self.zoom, arcade.color.ORANGE)
