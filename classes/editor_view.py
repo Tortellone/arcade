@@ -178,6 +178,9 @@ class EditorView(arcade.View):
             pfile = self.level.get("backgroundtexture", "")
             if pfile:
                 try:
+                    if not os.path.isabs(pfile):
+                        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                        pfile = os.path.join(base_dir, pfile)
                     tex = arcade.load_texture(pfile)
                     tw = tex.width
                     th = tex.height
