@@ -528,10 +528,18 @@ class GameView(arcade.View):
                 player_set = True
             elif name == "UFO":
                 ufo = UFO(start_x=x, start_y=y, bounds_width=level_width, bounds_height=level_height)
+                if "width" in sprite_def:
+                    ufo.width = float(sprite_def["width"])
+                if "height" in sprite_def:
+                    ufo.height = float(sprite_def["height"])
                 self.ufo_list.append(ufo)
             elif name == "PORTAL":
                 target = self._parse_portal_target(sprite_def.get("extra"))
                 portal = Portal(center_x=x, center_y=y, target_level=target)
+                if "width" in sprite_def:
+                    portal.width = float(sprite_def["width"])
+                if "height" in sprite_def:
+                    portal.height = float(sprite_def["height"])
                 self.portal_list.append(portal)
 
         # Fallback se mancano definizioni

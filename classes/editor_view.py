@@ -48,6 +48,9 @@ class EditorView(arcade.View):
         self.popup_visible = False
         self.popup_inputs = {}
         self.ui_manager = arcade.gui.UIManager()
+        self.last_click_time = 0.0
+        self.last_click_x = 0
+        self.last_click_y = 0
 
         self.toolbar_height = 50
         self.panel_width = 280
@@ -383,6 +386,8 @@ class EditorView(arcade.View):
                 y -= 14
                 arcade.draw_text("Drag: sposta", px + 10, y, arcade.color.WHITE, 10)
                 y -= 13
+                arcade.draw_text("Doppio click: edit", px + 10, y, arcade.color.WHITE, 10)
+                y -= 13
                 arcade.draw_text("Frecce: sposta 10px", px + 10, y, arcade.color.WHITE, 10)
                 y -= 13
                 arcade.draw_text("Shift: precisione 1px", px + 10, y, arcade.color.WHITE, 10)
@@ -430,6 +435,13 @@ class EditorView(arcade.View):
 
         if button == arcade.MOUSE_BUTTON_LEFT:
             if self.tool == "select":
+                import time
+                now = time.time()
+                is_double_click = (now - self.last_click_time) < 0.35 and abs(x - self.last_click_x) < 10 and abs(y - self.last_click_y) < 10
+                self.last_click_time = now
+                self.last_click_x = x
+                self.last_click_y = y
+
                 # Prima controlla se c'e' un handle della piattaforma selezionata
                 handle = self._pick_handle(wx, wy)
                 if handle:
@@ -445,6 +457,9 @@ class EditorView(arcade.View):
                 found = self._pick_object(wx, wy)
                 if found:
                     self.selected_type, self.selected_index = found
+                    if is_double_click:
+                        self._open_properties_popup()
+                        return
                     self.dragging = True
                     obj = self._get_selected_obj()
                     if obj:
@@ -852,6 +867,8 @@ class EditorView(arcade.View):
                 ("name", "Name:", obj["name"]),
                 ("x", "X:", str(int(obj["x"]))),
                 ("y", "Y:", str(int(obj["y"]))),
+                ("width", "Width:", str(int(obj.get("width", 0)))),
+                ("height", "Height:", str(int(obj.get("height", 0)))),
             ]
             if obj["name"].upper() == "PORTAL":
                 fields.append(("extra", "Goto:", obj.get("extra", "")))
@@ -941,6 +958,10 @@ class EditorView(arcade.View):
                     obj["x"] = float(self.popup_inputs["x"].text)
                 if "y" in self.popup_inputs:
                     obj["y"] = float(self.popup_inputs["y"].text)
+                if "width" in self.popup_inputs:
+                    obj["width"] = float(self.popup_inputs["width"].text)
+                if "height" in self.popup_inputs:
+                    obj["height"] = float(self.popup_inputs["height"].text)
                 if "extra" in self.popup_inputs:
                     obj["extra"] = self.popup_inputs["extra"].text.strip()
 

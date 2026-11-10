@@ -170,6 +170,10 @@ def _load_levels(text):
                             sprite["extra"] = data["extra"]
                         if "goto" in data:
                             sprite["extra"] = data["goto"]
+                        if "width" in data:
+                            sprite["width"] = float(data["width"])
+                        if "height" in data:
+                            sprite["height"] = float(data["height"])
                         level["sprites"].append(sprite)
                 continue
 
@@ -365,10 +369,16 @@ def save_levels_to_md(path, levels):
             name = sprite.get("name", "UNKNOWN")
             x = sprite.get("x", 0)
             y = sprite.get("y", 0)
+            width = sprite.get("width")
+            height = sprite.get("height")
+            parts = [f"name:{name}", f"x:{x}", f"y:{y}"]
+            if width is not None:
+                parts.append(f"width:{width}")
+            if height is not None:
+                parts.append(f"height:{height}")
             if extra:
-                lines.append(f"SPRITE name:{name}, x:{x}, y:{y}, goto:{extra}\n")
-            else:
-                lines.append(f"SPRITE name:{name}, x:{x}, y:{y}\n")
+                parts.append(f"goto:{extra}")
+            lines.append(f"SPRITE {', '.join(parts)}\n")
 
         lines.append("\n")
         for pf in level.get("platforms", []):
